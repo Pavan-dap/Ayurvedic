@@ -129,32 +129,7 @@ const ProductionBatchList: React.FC = () => {
     }
   };
 
-  const startProduction = async (id: number) => {
-    try {
-      setBatches(batches.map(batch =>
-        batch.id === id ? { ...batch, status: 'IN_PROGRESS' } : batch
-      ));
-      toast.success('Production started successfully');
-    } catch (error) {
-      toast.error('Failed to start production');
-    }
-  };
-
-  const completeProduction = async (id: number, actualQuantity: number) => {
-    try {
-      setBatches(batches.map(batch =>
-        batch.id === id ? { 
-          ...batch, 
-          status: 'COMPLETED', 
-          actual_quantity: actualQuantity,
-          completion_date: new Date().toISOString().split('T')[0]
-        } : batch
-      ));
-      toast.success('Production completed successfully');
-    } catch (error) {
-      toast.error('Failed to complete production');
-    }
-  };
+  const startProductionBatch
 
   const BatchDetailsModal = ({ batch, onClose }: { batch: ProductionBatch; onClose: () => void }) => {
     const [actualQuantity, setActualQuantity] = useState(batch.actual_quantity || batch.planned_quantity);
