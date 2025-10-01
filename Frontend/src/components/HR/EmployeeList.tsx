@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, CreditCard as Edit, Trash2, User } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
 import toast from 'react-hot-toast';
 
@@ -72,12 +73,12 @@ const EmployeeList: React.FC = () => {
   const loadEmployees = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setEmployees(mockEmployees);
-        setLoading(false);
-      }, 1000);
+      const data = await apiService.getEmployees();
+      const items = (data?.results || data || []) as Employee[];
+      setEmployees(items);
     } catch (error) {
       toast.error('Failed to load employees');
+    } finally {
       setLoading(false);
     }
   };
@@ -93,8 +94,9 @@ const EmployeeList: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        setEmployees(employees.filter(e => e.id !== id));
+        await apiService.delete(`/hr/employees/${id}/`);
         toast.success('Employee deleted successfully');
+        loadEmployees();
       } catch (error) {
         toast.error('Failed to delete employee');
       }
@@ -116,19 +118,13 @@ const EmployeeList: React.FC = () => {
       e.preventDefault();
       try {
         if (employee) {
-          const updatedEmployee = { ...employee, ...formData };
-          setEmployees(employees.map(e => e.id === employee.id ? updatedEmployee : e));
+          await apiService.updateEmployee(employee.id, formData);
           toast.success('Employee updated successfully');
         } else {
-          const newEmployee: Employee = {
-            id: Date.now(),
-            employee_id: `EMP${String(Date.now()).slice(-4)}`,
-            ...formData,
-            is_active: true
-          };
-          setEmployees([...employees, newEmployee]);
+          await apiService.createEmployee(formData);
           toast.success('Employee added successfully');
         }
+        await loadEmployees();
         onClose();
       } catch (error) {
         toast.error('Failed to save employee');
