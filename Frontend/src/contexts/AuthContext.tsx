@@ -115,6 +115,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isDemo: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -137,24 +138,48 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   const isAuthenticated = !!user;
 
-  // 🔑 Check stored token on reload (demo mode: set lightweight user)
+  // 🔑 Check stored token on reload and fetch user from backend (demo token supported)
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      apiService.setAuthToken(token);
-      setUser({
-        id: 0,
-        username: 'user',
-        email: '',
-        first_name: '',
-        last_name: '',
-        is_staff: true,
-      });
-    }
-    setLoading(false);
+    const init = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      if (token === 'demo-token') {
+        setIsDemo(true);
+        setUser({
+          id: 0,
+          username: 'demo',
+          email: '',
+          first_name: 'Demo',
+          last_name: 'User',
+          is_staff: true,
+        });
+        setLoading(false);
+        return;
+      }
+      try {
+        apiService.setAuthToken(token);
+        const decoded: any = jwtDecode(token);
+        const userId = decoded.user_id;
+        const userResponse = await apiService.get(`/users/${userId}/`);
+        setUser(userResponse);
+      } catch (e) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        apiService.setAuthToken(null);
+        setUser(null);
+      } finally {
+        setIsDemo(false);
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   // 🔐 Login
@@ -190,6 +215,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     isAuthenticated,
+    isDemo,
     loading,
     login,
     logout,
