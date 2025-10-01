@@ -481,7 +481,7 @@ const ProductionBatchList: React.FC = () => {
                           </button>
                           {batch.status === 'PLANNED' && (
                             <button
-                              onClick={() => startProduction(batch.id)}
+                              onClick={() => startProductionBatch(batch.id)}
                               className="btn btn-primary btn-sm"
                             >
                               <Play className="w-3 h-3 mr-1" />
