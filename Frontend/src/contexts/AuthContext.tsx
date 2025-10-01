@@ -152,6 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       if (token === 'demo-token') {
         setIsDemo(true);
+        apiService.setAuthToken(null);
         setUser({
           id: 0,
           username: 'demo',
