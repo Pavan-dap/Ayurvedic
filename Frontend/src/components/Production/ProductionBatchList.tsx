@@ -270,17 +270,9 @@ const ProductionBatchList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const newBatch: ProductionBatch = {
-          id: Date.now(),
-          batch_number: `PB${Date.now()}`,
-          ...formData,
-          actual_quantity: 0,
-          status: 'PLANNED',
-          total_cost: 0,
-          ingredients: []
-        };
-        setBatches([...batches, newBatch]);
+        await apiService.createProductionBatch(formData);
         toast.success('Production batch created successfully');
+        loadBatches();
         onClose();
       } catch (error) {
         toast.error('Failed to create production batch');
