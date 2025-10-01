@@ -28,25 +28,14 @@ const Login: React.FC = () => {
     }
   };
 
-  // Demo login function
+  // Demo login (no backend calls)
   const handleDemoLogin = async () => {
-    setUsername('admin');
-    setPassword('admin123');
     setLoading(true);
-    
-    // Simulate API delay
-    setTimeout(async () => {
-      try {
-        await login('admin', 'admin123');
-        toast.success('Welcome to AyurERP Demo!');
-      } catch (error: any) {
-        // For demo purposes, always succeed
-        localStorage.setItem('accessToken', 'demo-token');
-        window.location.reload();
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+    setTimeout(() => {
+      localStorage.setItem('accessToken', 'demo-token');
+      toast.success('Welcome to AyurERP Demo!');
+      window.location.reload();
+    }, 600);
   };
 
   return (
