@@ -69,12 +69,11 @@ const PurchaseOrderList: React.FC = () => {
     setLoading(true);
     try {
       const data = await apiService.getPurchaseOrders();
-      setTimeout(() => {
-        setOrders(data?.results || mockOrders);
-        setLoading(false);
-      }, 1000);
+      const items = (data?.results || data || []) as PurchaseOrder[];
+      setOrders(items);
     } catch (error) {
       toast.error('Failed to load purchase orders');
+    } finally {
       setLoading(false);
     }
   };
@@ -98,10 +97,9 @@ const PurchaseOrderList: React.FC = () => {
 
   const confirmOrder = async (id: number) => {
     try {
-      setOrders(orders.map(order =>
-        order.id === id ? { ...order, status: 'CONFIRMED' } : order
-      ));
+      await apiService.confirmPurchaseOrder(id);
       toast.success('Purchase order confirmed');
+      loadOrders();
     } catch (error) {
       toast.error('Failed to confirm order');
     }
