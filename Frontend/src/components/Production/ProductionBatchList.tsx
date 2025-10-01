@@ -92,12 +92,12 @@ const ProductionBatchList: React.FC = () => {
   const loadBatches = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setBatches(mockBatches);
-        setLoading(false);
-      }, 1000);
+      const data = await apiService.getProductionBatches();
+      const items = (data?.results || data || []) as ProductionBatch[];
+      setBatches(items);
     } catch (error) {
       toast.error('Failed to load production batches');
+    } finally {
       setLoading(false);
     }
   };
