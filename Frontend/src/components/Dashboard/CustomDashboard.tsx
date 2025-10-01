@@ -90,6 +90,20 @@ const CustomDashboard: React.FC = () => {
     loadDashboards();
   }, []);
 
+  useEffect(() => {
+    const fetchWidgets = async () => {
+      if (currentDashboard) {
+        try {
+          const fresh = await apiService.getDashboard(currentDashboard.id);
+          setWidgets(fresh.widgets || []);
+        } catch (e) {
+          toast.error('Failed to load widgets');
+        }
+      }
+    };
+    fetchWidgets();
+  }, [currentDashboard]);
+
   const loadDashboards = async () => {
     try {
       const data = await apiService.getDashboards();
