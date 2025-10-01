@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard as Edit, Trash2, BarChart3, PieChart, TrendingUp, Table, Save, Eye } from 'lucide-react';
+import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface DashboardWidget {
@@ -91,14 +92,13 @@ const CustomDashboard: React.FC = () => {
 
   const loadDashboards = async () => {
     try {
-      setTimeout(() => {
-        setDashboards(mockDashboards);
-        const defaultDashboard = mockDashboards.find(d => d.is_default);
-        if (defaultDashboard) {
-          setCurrentDashboard(defaultDashboard);
-          setWidgets(defaultDashboard.widgets);
-        }
-      }, 500);
+      const data = await apiService.getDashboards();
+      const items = (data?.results || data || []) as any[];
+      setDashboards(items);
+      const defaultDashboard = items.find((d: any) => d.is_default);
+      if (defaultDashboard) {
+        setCurrentDashboard(defaultDashboard);
+      }
     } catch (error) {
       toast.error('Failed to load dashboards');
     }
@@ -106,14 +106,9 @@ const CustomDashboard: React.FC = () => {
 
   const saveDashboard = async (dashboardData: any) => {
     try {
-      const newDashboard: SavedDashboard = {
-        id: Date.now(),
-        ...dashboardData,
-        widgets: widgets,
-        created_at: new Date().toISOString()
-      };
-      setDashboards([...dashboards, newDashboard]);
-      setCurrentDashboard(newDashboard);
+      const created = await apiService.createDashboard(dashboardData);
+      await loadDashboards();
+      setCurrentDashboard(created);
       toast.success('Dashboard saved successfully');
     } catch (error) {
       toast.error('Failed to save dashboard');
@@ -122,14 +117,12 @@ const CustomDashboard: React.FC = () => {
 
   const addWidget = async (widgetData: any) => {
     try {
-      const newWidget: DashboardWidget = {
-        id: Date.now(),
-        ...widgetData,
-        position: { x: 0, y: 0, width: 6, height: 4 },
-        created_at: new Date().toISOString()
-      };
-      setWidgets([...widgets, newWidget]);
+      await apiService.createWidget({ ...widgetData, dashboard: currentDashboard?.id });
       toast.success('Widget added successfully');
+      if (currentDashboard) {
+        const fresh = await apiService.getDashboard(currentDashboard.id);
+        setWidgets(fresh.widgets || []);
+      }
     } catch (error) {
       toast.error('Failed to add widget');
     }
@@ -137,7 +130,11 @@ const CustomDashboard: React.FC = () => {
 
   const updateWidget = async (id: number, widgetData: any) => {
     try {
-      setWidgets(widgets.map(w => w.id === id ? { ...w, ...widgetData } : w));
+      await apiService.updateWidget(id, widgetData);
+      if (currentDashboard) {
+        const fresh = await apiService.getDashboard(currentDashboard.id);
+        setWidgets(fresh.widgets || []);
+      }
       toast.success('Widget updated successfully');
     } catch (error) {
       toast.error('Failed to update widget');
@@ -147,8 +144,12 @@ const CustomDashboard: React.FC = () => {
   const deleteWidget = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this widget?')) {
       try {
-        setWidgets(widgets.filter(w => w.id !== id));
+        await apiService.deleteWidget(id);
         toast.success('Widget deleted successfully');
+        if (currentDashboard) {
+          const fresh = await apiService.getDashboard(currentDashboard.id);
+          setWidgets(fresh.widgets || []);
+        }
       } catch (error) {
         toast.error('Failed to delete widget');
       }
