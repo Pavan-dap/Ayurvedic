@@ -105,12 +105,11 @@ const StockTransferList: React.FC = () => {
     setLoading(true);
     try {
       const data = await apiService.getStockTransfer();
-      setTimeout(() => {
-        setTransfers(data?.results || mockTransfers);
-        setLoading(false);
-      }, 1000);
+      const items = (data?.results || data || []) as StockTransfer[];
+      setTransfers(items);
     } catch (error) {
       toast.error('Failed to load stock transfers');
+    } finally {
       setLoading(false);
     }
   };
@@ -146,10 +145,9 @@ const StockTransferList: React.FC = () => {
 
   const updateTransferStatus = async (id: number, newStatus: string) => {
     try {
-      setTransfers(transfers.map(transfer =>
-        transfer.id === id ? { ...transfer, status: newStatus } : transfer
-      ));
+      await apiService.patch(`/inventory/movements/${id}/`, { status: newStatus });
       toast.success(`Transfer ${newStatus.toLowerCase()} successfully`);
+      loadTransfers();
     } catch (error) {
       toast.error('Failed to update transfer status');
     }
@@ -188,20 +186,15 @@ const StockTransferList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const newTransfer: StockTransfer = {
-          id: Date.now(),
-          transfer_number: `ST${Date.now()}`,
-          from_outlet: formData.from_outlet === '1' ? 'Main Manufacturing Unit' : `Outlet ${formData.from_outlet}`,
-          to_outlet: formData.to_outlet === '1' ? 'Main Manufacturing Unit' : `Outlet ${formData.to_outlet}`,
+        await apiService.post('/inventory/movements/', {
+          from_outlet: formData.from_outlet,
+          to_outlet: formData.to_outlet,
           transfer_date: formData.transfer_date,
           expected_delivery: formData.expected_delivery,
-          status: 'PENDING',
-          total_items: formData.items.length,
-          total_value: 0,
-          items: []
-        };
-        setTransfers([...transfers, newTransfer]);
+          items: formData.items,
+        });
         toast.success('Stock transfer created successfully');
+        loadTransfers();
         onClose();
       } catch (error) {
         toast.error('Failed to create stock transfer');
