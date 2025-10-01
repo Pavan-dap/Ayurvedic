@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, CreditCard as Edit, Building2, MapPin } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
 import toast from 'react-hot-toast';
 
@@ -94,12 +95,12 @@ const OutletList: React.FC = () => {
   const loadOutlets = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setOutlets(mockOutlets);
-        setLoading(false);
-      }, 1000);
+      const data = await apiService.getOutlets();
+      const items = (data?.results || data || []) as Outlet[];
+      setOutlets(items);
     } catch (error) {
       toast.error('Failed to load outlets');
+    } finally {
       setLoading(false);
     }
   };
@@ -147,21 +148,13 @@ const OutletList: React.FC = () => {
       e.preventDefault();
       try {
         if (outlet) {
-          const updatedOutlet = { ...outlet, ...formData };
-          setOutlets(outlets.map(o => o.id === outlet.id ? updatedOutlet : o));
+          await apiService.put(`/outlets/outlets/${outlet.id}/`, formData);
           toast.success('Outlet updated successfully');
         } else {
-          const newOutlet: Outlet = {
-            id: Date.now(),
-            outlet_code: `OUT${String(Date.now()).slice(-4)}`,
-            ...formData,
-            is_active: true,
-            total_sales: 0,
-            stock_value: 0
-          };
-          setOutlets([...outlets, newOutlet]);
+          await apiService.createOutlet(formData);
           toast.success('Outlet added successfully');
         }
+        await loadOutlets();
         onClose();
       } catch (error) {
         toast.error('Failed to save outlet');
