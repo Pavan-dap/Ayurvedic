@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, User } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
 import toast from 'react-hot-toast';
 
@@ -70,12 +71,12 @@ const AttendanceList: React.FC = () => {
   const loadAttendance = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setAttendance(mockAttendance);
-        setLoading(false);
-      }, 1000);
+      const data = await apiService.getAttendance();
+      const items = (data?.results || data || []) as any[];
+      setAttendance(items as any);
     } catch (error) {
       toast.error('Failed to load attendance data');
+    } finally {
       setLoading(false);
     }
   };
@@ -87,19 +88,13 @@ const AttendanceList: React.FC = () => {
 
   const markAttendance = async (employeeId: string, status: 'present' | 'absent') => {
     try {
-      setAttendance(attendance.map(record =>
-        record.employee_id === employeeId
-          ? {
-              ...record,
-              is_present: status === 'present',
-              status: status === 'present' ? 'Present' : 'Absent',
-              check_in_time: status === 'present' ? '09:00:00' : '',
-              check_out_time: status === 'present' ? '18:00:00' : '',
-              total_hours: status === 'present' ? 9 : 0
-            }
-          : record
-      ));
+      await apiService.createAttendance({
+        employee_id: employeeId,
+        date: selectedDate,
+        is_present: status === 'present',
+      });
       toast.success(`Attendance marked as ${status}`);
+      loadAttendance();
     } catch (error) {
       toast.error('Failed to mark attendance');
     }
