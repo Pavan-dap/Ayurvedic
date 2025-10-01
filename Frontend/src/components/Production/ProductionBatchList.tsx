@@ -244,7 +244,7 @@ const ProductionBatchList: React.FC = () => {
                   </div>
                   <button
                     onClick={() => {
-                      completeProduction(batch.id, actualQuantity);
+                      completeProductionBatch(batch.id, actualQuantity);
                       onClose();
                     }}
                     className="btn btn-success"
