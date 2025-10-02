@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Truck, CheckCircle, Clock, ArrowRight, Package } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
 
@@ -30,13 +31,13 @@ interface TransferItem {
 
 const StockTransferList: React.FC = () => {
   const { selectedOutlet } = useData();
+  const { isDemo } = useAuth();
   const [transfers, setTransfers] = useState<StockTransfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<StockTransfer | null>(null);
-
 
   useEffect(() => {
     loadTransfers();
@@ -45,6 +46,42 @@ const StockTransferList: React.FC = () => {
   const loadTransfers = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const mock: StockTransfer[] = [
+          {
+            id: 1,
+            transfer_number: 'TR-2024-0001',
+            from_outlet: 'Main Manufacturing Unit',
+            to_outlet: 'Sector 17 Store',
+            transfer_date: '2024-01-18',
+            expected_delivery: '2024-01-20',
+            status: 'IN_TRANSIT',
+            total_items: 3,
+            total_value: 21500,
+            items: [
+              { id: 11, product_name: 'Brahmi Hair Oil', batch_number: 'B2301', quantity_requested: 50, quantity_sent: 50, quantity_received: 0, unit_price: 120, expiry_date: '2025-01-10' },
+              { id: 12, product_name: 'Triphala Churna', batch_number: 'T2402', quantity_requested: 30, quantity_sent: 30, quantity_received: 0, unit_price: 80, expiry_date: '2024-11-05' },
+              { id: 13, product_name: 'Neem Leaves', batch_number: 'N2310', quantity_requested: 100, quantity_sent: 100, quantity_received: 0, unit_price: 45, expiry_date: '2025-12-31' },
+            ],
+          },
+          {
+            id: 2,
+            transfer_number: 'TR-2024-0002',
+            from_outlet: 'Warehouse',
+            to_outlet: 'Panchkula Outlet',
+            transfer_date: '2024-01-16',
+            expected_delivery: '2024-01-19',
+            status: 'PENDING',
+            total_items: 1,
+            total_value: 9600,
+            items: [
+              { id: 21, product_name: 'Bottles 200ml', batch_number: 'PK200', quantity_requested: 300, quantity_sent: 0, quantity_received: 0, unit_price: 32, expiry_date: '2026-12-31' },
+            ],
+          },
+        ];
+        setTransfers(mock);
+        return;
+      }
       const data = await apiService.getStockTransfer();
       const items = (data?.results || data || []) as StockTransfer[];
       setTransfers(items);
@@ -86,6 +123,11 @@ const StockTransferList: React.FC = () => {
 
   const updateTransferStatus = async (id: number, newStatus: string) => {
     try {
+      if (isDemo) {
+        setTransfers(prev => prev.map(t => (t.id === id ? { ...t, status: newStatus } : t)));
+        toast.success(`Transfer ${newStatus.toLowerCase()} successfully`);
+        return;
+      }
       await apiService.patch(`/inventory/movements/${id}/`, { status: newStatus });
       toast.success(`Transfer ${newStatus.toLowerCase()} successfully`);
       loadTransfers();
@@ -127,6 +169,33 @@ const StockTransferList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
+        if (isDemo) {
+          const newTransfer: StockTransfer = {
+            id: Date.now(),
+            transfer_number: `TR-${String(Date.now()).slice(-6)}`,
+            from_outlet: formData.from_outlet,
+            to_outlet: formData.to_outlet,
+            transfer_date: formData.transfer_date,
+            expected_delivery: formData.expected_delivery,
+            status: 'PENDING',
+            total_items: formData.items.length,
+            total_value: formData.items.reduce((s, it: any) => s + Number(it.quantity || 0) * 100, 0),
+            items: formData.items.map((it: any, idx: number) => ({
+              id: idx + 1,
+              product_name: it.product_name || 'Unknown',
+              batch_number: it.batch_number || 'NA',
+              quantity_requested: Number(it.quantity || 0),
+              quantity_sent: 0,
+              quantity_received: 0,
+              unit_price: 100,
+              expiry_date: new Date(Date.now() + 200 * 24 * 3600 * 1000).toISOString().split('T')[0],
+            })),
+          };
+          setTransfers(prev => [newTransfer, ...prev]);
+          toast.success('Stock transfer created successfully');
+          onClose();
+          return;
+        }
         await apiService.post('/inventory/movements/', {
           from_outlet: formData.from_outlet,
           to_outlet: formData.to_outlet,
@@ -238,7 +307,7 @@ const StockTransferList: React.FC = () => {
                         <input
                           type="number"
                           placeholder="Quantity"
-                          value={item.quantity}
+                          value={item.quantity as any}
                           onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
                           className="input"
                         />
