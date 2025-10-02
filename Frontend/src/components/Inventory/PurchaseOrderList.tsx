@@ -31,34 +31,6 @@ const PurchaseOrderList: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
 
-  // Mock data
-  const mockOrders: PurchaseOrder[] = [
-    {
-      id: 1,
-      po_number: 'PO20240101',
-      vendor_name: 'Himalayan Herbs Pvt Ltd',
-      po_date: '2024-01-15',
-      expected_delivery: '2024-01-25',
-      status: 'CONFIRMED',
-      total_amount: 25000,
-      items: [
-        { id: 1, product_name: 'Brahmi Leaves', quantity: 50, unit_price: 800, total_price: 40000 },
-        { id: 2, product_name: 'Amla Powder', quantity: 25, unit_price: 600, total_price: 15000 }
-      ]
-    },
-    {
-      id: 2,
-      po_number: 'PO20240102',
-      vendor_name: 'Packaging Solutions',
-      po_date: '2024-01-18',
-      expected_delivery: '2024-01-28',
-      status: 'SENT',
-      total_amount: 15000,
-      items: [
-        { id: 3, product_name: 'Glass Bottles 100ml', quantity: 1000, unit_price: 15, total_price: 15000 }
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadOrders();
