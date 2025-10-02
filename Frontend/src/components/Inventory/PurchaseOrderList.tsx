@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, CheckCircle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
 
@@ -25,12 +26,12 @@ interface POItem {
 
 const PurchaseOrderList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-
 
   useEffect(() => {
     loadOrders();
@@ -39,6 +40,37 @@ const PurchaseOrderList: React.FC = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const mock: PurchaseOrder[] = [
+          {
+            id: 1,
+            po_number: 'PO-2024-0001',
+            vendor_name: 'Herbal Sourcing Co.',
+            po_date: '2024-01-10',
+            expected_delivery: '2024-01-20',
+            status: 'SENT',
+            total_amount: 45500,
+            items: [
+              { id: 11, product_name: 'Neem Leaves', quantity: 200, unit_price: 45, total_price: 9000 },
+              { id: 12, product_name: 'Bottles 200ml', quantity: 1000, unit_price: 36.5, total_price: 36500 },
+            ],
+          },
+          {
+            id: 2,
+            po_number: 'PO-2024-0002',
+            vendor_name: 'Ayur Packagers',
+            po_date: '2024-01-12',
+            expected_delivery: '2024-01-25',
+            status: 'CONFIRMED',
+            total_amount: 18000,
+            items: [
+              { id: 21, product_name: 'Labels', quantity: 5000, unit_price: 3.6, total_price: 18000 },
+            ],
+          },
+        ];
+        setOrders(mock);
+        return;
+      }
       const data = await apiService.getPurchaseOrders();
       const items = (data?.results || data || []) as PurchaseOrder[];
       setOrders(items);
@@ -68,6 +100,11 @@ const PurchaseOrderList: React.FC = () => {
 
   const confirmOrder = async (id: number) => {
     try {
+      if (isDemo) {
+        setOrders(prev => prev.map(o => (o.id === id ? { ...o, status: 'CONFIRMED' } : o)));
+        toast.success('Purchase order confirmed');
+        return;
+      }
       await apiService.confirmPurchaseOrder(id);
       toast.success('Purchase order confirmed');
       loadOrders();
