@@ -37,65 +37,6 @@ const StockTransferList: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<StockTransfer | null>(null);
 
-  // Mock data
-  const mockTransfers: StockTransfer[] = [
-    {
-      id: 1,
-      transfer_number: 'ST20240101',
-      from_outlet: 'Main Manufacturing Unit',
-      to_outlet: 'Sector 17 Store',
-      transfer_date: '2024-01-20',
-      expected_delivery: '2024-01-21',
-      status: 'IN_TRANSIT',
-      total_items: 3,
-      total_value: 15000,
-      items: [
-        {
-          id: 1,
-          product_name: 'Brahmi Hair Oil',
-          batch_number: 'BHO202401001',
-          quantity_requested: 50,
-          quantity_sent: 50,
-          quantity_received: 0,
-          unit_price: 120,
-          expiry_date: '2025-01-15'
-        },
-        {
-          id: 2,
-          product_name: 'Triphala Churna',
-          batch_number: 'TC202401001',
-          quantity_requested: 30,
-          quantity_sent: 30,
-          quantity_received: 0,
-          unit_price: 200,
-          expiry_date: '2025-01-20'
-        }
-      ]
-    },
-    {
-      id: 2,
-      transfer_number: 'ST20240102',
-      from_outlet: 'Main Manufacturing Unit',
-      to_outlet: 'Panchkula Outlet',
-      transfer_date: '2024-01-19',
-      expected_delivery: '2024-01-20',
-      status: 'RECEIVED',
-      total_items: 2,
-      total_value: 12000,
-      items: [
-        {
-          id: 3,
-          product_name: 'Neem Face Cream',
-          batch_number: 'NFC202401001',
-          quantity_requested: 25,
-          quantity_sent: 25,
-          quantity_received: 25,
-          unit_price: 250,
-          expiry_date: '2025-01-25'
-        }
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadTransfers();
