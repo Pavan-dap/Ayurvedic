@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, CreditCard as Edit, Trash2, User } from 'lucide-react';
 import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface Employee {
@@ -19,13 +20,13 @@ interface Employee {
 
 const EmployeeList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-
 
   useEffect(() => {
     loadEmployees();
@@ -34,6 +35,15 @@ const EmployeeList: React.FC = () => {
   const loadEmployees = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const mock: Employee[] = [
+          { id: 1, employee_id: 'EMP-001', name: 'Amit Sharma', email: 'amit@company.com', phone: '9876500001', department: 'Production', designation: 'Supervisor', salary: 35000, join_date: '2022-06-10', is_active: true },
+          { id: 2, employee_id: 'EMP-002', name: 'Priya Verma', email: 'priya@company.com', phone: '9876500002', department: 'Sales & Marketing', designation: 'Sales Executive', salary: 28000, join_date: '2023-01-05', is_active: true },
+          { id: 3, employee_id: 'EMP-003', name: 'Rohit Kumar', email: 'rohit@company.com', phone: '9876500003', department: 'Quality Control', designation: 'QC Analyst', salary: 30000, join_date: '2021-11-20', is_active: false },
+        ];
+        setEmployees(mock);
+        return;
+      }
       const data = await apiService.getEmployees();
       const items = (data?.results || data || []) as Employee[];
       setEmployees(items);
@@ -55,6 +65,11 @@ const EmployeeList: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
+        if (isDemo) {
+          setEmployees(prev => prev.filter(e => e.id !== id));
+          toast.success('Employee deleted successfully');
+          return;
+        }
         await apiService.delete(`/hr/employees/${id}/`);
         toast.success('Employee deleted successfully');
         loadEmployees();
@@ -78,6 +93,24 @@ const EmployeeList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
+        if (isDemo) {
+          if (employee) {
+            const updated: Employee = { ...employee, ...formData } as Employee;
+            setEmployees(prev => prev.map(e => (e.id === employee.id ? updated : e)));
+            toast.success('Employee updated successfully');
+          } else {
+            const newEmp: Employee = {
+              id: Date.now(),
+              employee_id: `EMP-${String(Date.now()).slice(-3)}`,
+              is_active: true,
+              ...formData,
+            } as Employee;
+            setEmployees(prev => [newEmp, ...prev]);
+            toast.success('Employee added successfully');
+          }
+          onClose();
+          return;
+        }
         if (employee) {
           await apiService.updateEmployee(employee.id, formData);
           toast.success('Employee updated successfully');
