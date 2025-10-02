@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, CreditCard as Edit, Trash2, Package, Barcode } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
 
@@ -20,14 +21,13 @@ interface Product {
 
 const ProductList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  // Data from backend
 
   useEffect(() => {
     loadProducts();
@@ -36,6 +36,15 @@ const ProductList: React.FC = () => {
   const loadProducts = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const mock: Product[] = [
+          { id: 1, product_code: 'PROD-0001', name: 'Brahmi Hair Oil', category: 'Herbal Oils', product_type: 'FINISHED', unit_price: 120, selling_price: 199, unit_of_measure: 'ml', barcode: '890123456001', is_active: true, stock_quantity: 150 },
+          { id: 2, product_code: 'PROD-0002', name: 'Triphala Churna', category: 'Herbal Powders', product_type: 'FINISHED', unit_price: 80, selling_price: 149, unit_of_measure: 'gm', barcode: '890123456002', is_active: true, stock_quantity: 85 },
+          { id: 3, product_code: 'RM-NEEM', name: 'Neem Leaves', category: 'Raw Materials', product_type: 'RAW_MATERIAL', unit_price: 45, selling_price: 0, unit_of_measure: 'kg', is_active: true, stock_quantity: 320 },
+        ];
+        setProducts(mock);
+        return;
+      }
       const data = await apiService.getProducts();
       const normalized = (data?.results || data || []).map((p: any) => ({
         id: p.id,
@@ -68,6 +77,11 @@ const ProductList: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
+        if (isDemo) {
+          setProducts(prev => prev.filter(p => p.id !== id));
+          toast.success('Product deleted successfully');
+          return;
+        }
         await apiService.deleteProduct(id);
         await loadProducts();
         toast.success('Product deleted successfully');
@@ -91,6 +105,25 @@ const ProductList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
+        if (isDemo) {
+          if (product) {
+            const updated: Product = { ...product, ...formData } as Product;
+            setProducts(prev => prev.map(p => (p.id === product.id ? updated : p)));
+            toast.success('Product updated successfully');
+          } else {
+            const newProduct: Product = {
+              id: Date.now(),
+              product_code: `PROD-${String(Date.now()).slice(-4)}`,
+              is_active: true,
+              stock_quantity: 0,
+              ...formData,
+            } as Product;
+            setProducts(prev => [newProduct, ...prev]);
+            toast.success('Product added successfully');
+          }
+          onClose();
+          return;
+        }
         if (product) {
           await apiService.updateProduct(product.id, formData);
           toast.success('Product updated successfully');
