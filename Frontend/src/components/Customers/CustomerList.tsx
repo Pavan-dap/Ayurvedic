@@ -434,6 +434,7 @@ import React, { useState, useEffect } from 'react';
 import apiService from '../../services/api';
 import { Plus, Search, CreditCard as Edit, Trash2, Phone, Mail } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface Customer {
@@ -454,6 +455,7 @@ interface Customer {
 
 const CustomerList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -465,13 +467,23 @@ const CustomerList: React.FC = () => {
     loadCustomers();
   }, [refreshTrigger, searchTerm, filterType]);
 
-  // ✅ Load customers from API
+  // ✅ Load customers from API (or mock in demo)
   const loadCustomers = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        ordering: '-created_at',
-      });
+      if (isDemo) {
+        const mock: Customer[] = [
+          { id: 1, customer_code: 'CUST0001', name: 'Rajesh Kumar', email: 'rajesh@example.com', phone: '9876543210', city: 'Chandigarh', state: 'Punjab', customer_type: 'RETAIL', loyalty_points: 120, is_active: true, created_at: '2024-01-15' },
+          { id: 2, customer_code: 'CUST0002', name: 'Priya Sharma', email: 'priya@example.com', phone: '9876543211', city: 'Mohali', state: 'Punjab', customer_type: 'B2B', loyalty_points: 300, is_active: true, created_at: '2024-01-16' },
+        ];
+        const filtered = mock.filter(c =>
+          (!searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.customer_code.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm)) &&
+          (!filterType || c.customer_type === filterType)
+        );
+        setCustomers(filtered);
+        return;
+      }
+      const params = new URLSearchParams({ ordering: '-created_at' });
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('customer_type', filterType);
       const data = await apiService.get(`/customers/customers/?${params.toString()}`);
