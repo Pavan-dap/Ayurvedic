@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, AlertTriangle, Calendar, Package } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
 
@@ -20,12 +21,11 @@ interface Stock {
 
 const StockList: React.FC = () => {
   const { selectedOutlet } = useData();
+  const { isDemo } = useAuth();
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAlert, setFilterAlert] = useState('');
-
-  // Backend data
 
   useEffect(() => {
     loadStocks();
@@ -34,6 +34,17 @@ const StockList: React.FC = () => {
   const loadStocks = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const today = new Date();
+        const d = (n: number) => new Date(today.getTime() + n * 24 * 3600 * 1000).toISOString();
+        const mock: Stock[] = [
+          { id: 1, product_name: 'Brahmi Hair Oil', product_code: 'PROD-0001', batch_number: 'B2301', quantity: 200, available_quantity: 180, reserved_quantity: 20, unit_cost: 120, expiry_date: d(120), outlet_name: 'Main Manufacturing Unit', days_to_expiry: 120 },
+          { id: 2, product_name: 'Triphala Churna', product_code: 'PROD-0002', batch_number: 'T2402', quantity: 90, available_quantity: 15, reserved_quantity: 5, unit_cost: 80, expiry_date: d(25), outlet_name: 'Sector 17 Store', days_to_expiry: 25 },
+          { id: 3, product_name: 'Neem Leaves', product_code: 'RM-NEEM', batch_number: 'N2310', quantity: 500, available_quantity: 500, reserved_quantity: 0, unit_cost: 45, expiry_date: d(365), outlet_name: 'Warehouse', days_to_expiry: 365 },
+        ];
+        setStocks(mock);
+        return;
+      }
       const data = await apiService.get('/inventory/stock/');
       const items = data?.results || data || [];
       const normalized: Stock[] = items.map((s: any) => ({
