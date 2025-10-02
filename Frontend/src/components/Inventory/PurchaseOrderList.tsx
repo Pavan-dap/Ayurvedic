@@ -113,7 +113,7 @@ const PurchaseOrderList: React.FC = () => {
           <p className="text-gray-600">Manage purchase orders and procurement</p>
         </div>
         <button
-          onClick={() => toast.info('Use Vendors to create POs in this demo')}
+          onClick={() => toast('Use Vendors to create POs in this demo')}
           className="btn btn-primary"
         >
           <Plus className="w-4 h-4 mr-2" />
