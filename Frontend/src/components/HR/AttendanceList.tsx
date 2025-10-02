@@ -24,45 +24,6 @@ const AttendanceList: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Mock data
-  const mockAttendance: Attendance[] = [
-    {
-      id: 1,
-      employee_name: 'Rajesh Kumar',
-      employee_id: 'EMP1001',
-      date: '2024-01-20',
-      check_in_time: '09:15:00',
-      check_out_time: '18:30:00',
-      total_hours: 9.25,
-      is_present: true,
-      is_late: true,
-      status: 'Present'
-    },
-    {
-      id: 2,
-      employee_name: 'Priya Sharma',
-      employee_id: 'EMP1002',
-      date: '2024-01-20',
-      check_in_time: '08:45:00',
-      check_out_time: '17:45:00',
-      total_hours: 9.0,
-      is_present: true,
-      is_late: false,
-      status: 'Present'
-    },
-    {
-      id: 3,
-      employee_name: 'Dr. Amit Verma',
-      employee_id: 'EMP1003',
-      date: '2024-01-20',
-      check_in_time: '',
-      check_out_time: '',
-      total_hours: 0,
-      is_present: false,
-      is_late: false,
-      status: 'Absent'
-    }
-  ];
 
   useEffect(() => {
     loadAttendance();

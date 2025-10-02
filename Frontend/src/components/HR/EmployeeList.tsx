@@ -26,45 +26,6 @@ const EmployeeList: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
-  // Mock data
-  const mockEmployees: Employee[] = [
-    {
-      id: 1,
-      employee_id: 'EMP1001',
-      name: 'Rajesh Kumar',
-      email: 'rajesh@ayurvedicerp.com',
-      phone: '9876543210',
-      department: 'Production',
-      designation: 'Production Manager',
-      salary: 45000,
-      join_date: '2023-01-15',
-      is_active: true
-    },
-    {
-      id: 2,
-      employee_id: 'EMP1002',
-      name: 'Priya Sharma',
-      email: 'priya@ayurvedicerp.com',
-      phone: '9876543211',
-      department: 'Sales & Marketing',
-      designation: 'Sales Executive',
-      salary: 35000,
-      join_date: '2023-03-20',
-      is_active: true
-    },
-    {
-      id: 3,
-      employee_id: 'EMP1003',
-      name: 'Dr. Amit Verma',
-      email: 'amit@ayurvedicerp.com',
-      phone: '9876543212',
-      department: 'Quality Control',
-      designation: 'Quality Manager',
-      salary: 55000,
-      join_date: '2023-02-10',
-      is_active: true
-    }
-  ];
 
   useEffect(() => {
     loadEmployees();

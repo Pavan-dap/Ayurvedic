@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, BarChart3, PieChart, TrendingUp, Table, Save, Eye } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, BarChart3, PieChart, TrendingUp, Save, Eye } from 'lucide-react';
 import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -33,58 +33,6 @@ const CustomDashboard: React.FC = () => {
   const [showDashboardModal, setShowDashboardModal] = useState(false);
   const [editingWidget, setEditingWidget] = useState<DashboardWidget | null>(null);
 
-  // Mock saved dashboards
-  const mockDashboards: SavedDashboard[] = [
-    {
-      id: 1,
-      name: 'Sales Overview',
-      description: 'Daily sales metrics and trends',
-      widgets: [
-        {
-          id: 1,
-          name: 'Daily Sales',
-          type: 'chart',
-          chart_type: 'bar',
-          data_source: 'sales',
-          filters: { period: 'daily' },
-          position: { x: 0, y: 0, width: 6, height: 4 },
-          config: { title: 'Daily Sales Trend' },
-          created_at: '2024-01-20'
-        },
-        {
-          id: 2,
-          name: 'Top Products',
-          type: 'table',
-          data_source: 'products',
-          filters: { sort: 'sales_desc', limit: 10 },
-          position: { x: 6, y: 0, width: 6, height: 4 },
-          config: { title: 'Top Selling Products' },
-          created_at: '2024-01-20'
-        }
-      ],
-      is_default: true,
-      created_at: '2024-01-20'
-    },
-    {
-      id: 2,
-      name: 'Inventory Dashboard',
-      description: 'Stock levels and alerts',
-      widgets: [
-        {
-          id: 3,
-          name: 'Stock Alerts',
-          type: 'alert',
-          data_source: 'inventory',
-          filters: { alert_type: 'low_stock' },
-          position: { x: 0, y: 0, width: 4, height: 3 },
-          config: { title: 'Low Stock Alerts' },
-          created_at: '2024-01-20'
-        }
-      ],
-      is_default: false,
-      created_at: '2024-01-20'
-    }
-  ];
 
   useEffect(() => {
     loadDashboards();

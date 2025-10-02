@@ -211,7 +211,7 @@ class ApiService {
   }
 
   async confirmPurchaseOrder(id: number) {
-    return this.post(`/inventory/purchase-orders/${id}/confirm_order/`);
+    return this.post(`/inventory/purchase-orders/${id}/confirm_order/`, {});
   }
 
   async getSales() {
@@ -252,7 +252,7 @@ class ApiService {
   }
 
   async startProduction(id: number) {
-    return this.post(`/production/batches/${id}/start_production/`);
+    return this.post(`/production/batches/${id}/start_production/`, {});
   }
 
   async completeProduction(id: number, data: any) {
@@ -296,7 +296,7 @@ class ApiService {
   }
 
   async approveExpense(id: number) {
-    return this.post(`/finance/expenses/${id}/approve_expense/`);
+    return this.post(`/finance/expenses/${id}/approve_expense/`, {});
   }
 
   async getDashboardSummary() {

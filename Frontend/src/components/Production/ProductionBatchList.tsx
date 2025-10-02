@@ -35,55 +35,6 @@ const ProductionBatchList: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<ProductionBatch | null>(null);
 
-  // Mock data based on the handwritten formulas from attachments
-  const mockBatches: ProductionBatch[] = [
-    {
-      id: 1,
-      batch_number: 'PB20240101',
-      product_name: 'Premium Coconut Oil',
-      formula_name: 'Premium Coconut Oil Formula',
-      planned_quantity: 900,
-      actual_quantity: 880,
-      status: 'COMPLETED',
-      production_date: '2024-01-15',
-      completion_date: '2024-01-16',
-      total_cost: 15000,
-      ingredients: [
-        { id: 1, name: 'Sprig Twist', required_quantity: 900, unit: 'gm', cost_per_unit: 5 },
-        { id: 2, name: 'Shea Butter Extract', required_quantity: 100, unit: 'gm', cost_per_unit: 15 },
-        { id: 3, name: 'Coconut Milk', required_quantity: 350, unit: 'gm', cost_per_unit: 8 },
-        { id: 4, name: 'Aloe Vera Gel', required_quantity: 150, unit: 'gm', cost_per_unit: 12 },
-        { id: 5, name: 'Rose Water', required_quantity: 50, unit: 'gm', cost_per_unit: 10 },
-        { id: 6, name: 'Mandela Pulp', required_quantity: 75, unit: 'gm', cost_per_unit: 20 },
-        { id: 7, name: 'Green Tea Extract', required_quantity: 50, unit: 'gm', cost_per_unit: 25 },
-        { id: 8, name: 'Onion Seed Extract', required_quantity: 37.5, unit: 'gm', cost_per_unit: 30 },
-        { id: 9, name: 'Argan Oil', required_quantity: 20, unit: 'ml', cost_per_unit: 50 },
-        { id: 10, name: 'Grape Seed Oil', required_quantity: 20, unit: 'ml', cost_per_unit: 40 },
-        { id: 11, name: 'Neem Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 35 },
-        { id: 12, name: 'Jasmin Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 60 },
-        { id: 13, name: 'Tea Tree Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 45 },
-        { id: 14, name: 'Ethylene', required_quantity: 35, unit: 'gm', cost_per_unit: 15 },
-        { id: 15, name: 'Pyridoxine', required_quantity: 35, unit: 'gm', cost_per_unit: 25 }
-      ]
-    },
-    {
-      id: 2,
-      batch_number: 'PB20240102',
-      product_name: 'Herbal Hair Oil',
-      formula_name: 'Traditional Hair Oil',
-      planned_quantity: 500,
-      actual_quantity: 0,
-      status: 'IN_PROGRESS',
-      production_date: '2024-01-20',
-      total_cost: 8500,
-      ingredients: [
-        { id: 1, name: 'Coconut Oil Base', required_quantity: 300, unit: 'ml', cost_per_unit: 20 },
-        { id: 2, name: 'Brahmi Extract', required_quantity: 50, unit: 'gm', cost_per_unit: 40 },
-        { id: 3, name: 'Amla Powder', required_quantity: 75, unit: 'gm', cost_per_unit: 25 },
-        { id: 4, name: 'Fenugreek Seeds', required_quantity: 25, unit: 'gm', cost_per_unit: 15 }
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadBatches();

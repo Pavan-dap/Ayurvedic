@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Eye, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, Eye, CheckCircle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
@@ -29,7 +29,6 @@ const PurchaseOrderList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
 
   // Mock data
@@ -114,7 +113,7 @@ const PurchaseOrderList: React.FC = () => {
           <p className="text-gray-600">Manage purchase orders and procurement</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => toast.info('Use Vendors to create POs in this demo')}
           className="btn btn-primary"
         >
           <Plus className="w-4 h-4 mr-2" />
