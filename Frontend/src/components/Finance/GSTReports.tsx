@@ -118,6 +118,15 @@ const GSTReports: React.FC = () => {
     loadReports();
   }, [selectedOutlet, selectedMonth, selectedYear]);
 
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="spinner w-8 h-8 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading reports...</p>
+      </div>
+    );
+  }
+
   const loadReports = async () => {
     setLoading(true);
     try {
