@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Minus, ShoppingCart, User, Phone, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Search, Plus, Minus, ShoppingCart, User, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface Product {
@@ -23,12 +24,7 @@ interface Customer {
 }
 
 const POSSystem: React.FC = () => {
-  const [products] = useState<Product[]>([
-    { id: 1, name: 'Brahmi Hair Oil', price: 120, stock: 50, barcode: '8901234567890' },
-    { id: 2, name: 'Triphala Churna', price: 200, stock: 30, barcode: '8901234567891' },
-    { id: 3, name: 'Neem Face Cream', price: 250, stock: 25, barcode: '8901234567892' },
-    { id: 4, name: 'Ashwagandha Capsules', price: 350, stock: 40, barcode: '8901234567893' },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +37,20 @@ const POSSystem: React.FC = () => {
   const [upiAmount, setUpiAmount] = useState(0);
   const [cardAmount, setCardAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await apiService.getProducts();
+        const items = (data?.results || data || []) as any[];
+        const mapped = items.map((p: any) => ({ id: p.id, name: p.name || p.product_name, price: Number(p.price || p.selling_price || 0), stock: Number(p.stock || p.quantity || 0), barcode: p.barcode }));
+        setProducts(mapped);
+      } catch (e) {
+        // keep empty
+      }
+    };
+    loadProducts();
+  }, []);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,32 +98,47 @@ const POSSystem: React.FC = () => {
 
   const searchCustomer = async () => {
     if (customerPhone.length >= 10) {
-      // Mock customer search
-      const mockCustomer = {
-        id: 1,
-        name: 'Rajesh Kumar',
-        phone: customerPhone,
-        loyalty_points: 150
-      };
-      setCustomer(mockCustomer);
-      setCustomerName(mockCustomer.name);
-      toast.success('Customer found!');
+      try {
+        const data = await apiService.getCustomers();
+        const list = (data?.results || data || []) as any[];
+        const match = list.find((c: any) => c.phone?.includes(customerPhone));
+        if (match) {
+          const found: Customer = {
+            id: match.id,
+            name: match.name,
+            phone: match.phone,
+            loyalty_points: match.loyalty_points || 0,
+          };
+          setCustomer(found);
+          setCustomerName(found.name);
+          toast.success('Customer found!');
+          return;
+        }
+      } catch (e) {
+        // fallthrough to show form
+      }
+      setShowCustomerForm(true);
     } else {
       setShowCustomerForm(true);
     }
   };
 
-  const saveCustomer = () => {
+  const saveCustomer = async () => {
     if (customerName && customerPhone) {
-      const newCustomer = {
-        id: Date.now(),
-        name: customerName,
-        phone: customerPhone,
-        loyalty_points: 0
-      };
-      setCustomer(newCustomer);
-      setShowCustomerForm(false);
-      toast.success('Customer saved!');
+      try {
+        const created = await apiService.createCustomer({ name: customerName, phone: customerPhone });
+        const saved: Customer = {
+          id: created.id,
+          name: created.name,
+          phone: created.phone,
+          loyalty_points: created.loyalty_points || 0,
+        };
+        setCustomer(saved);
+        setShowCustomerForm(false);
+        toast.success('Customer saved!');
+      } catch (e) {
+        toast.error('Failed to save customer');
+      }
     }
   };
 

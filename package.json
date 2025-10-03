@@ -2,8 +2,11 @@
   "name": "ayurvedic-herbal-ksr",
   "version": "1.0.0",
   "scripts": {
-    "start": "npm-run-all --parallel start:backend start:frontend",
-    "start:backend": "cd Backend && python manage.py runserver",
+    "dev": "npm-run-all --parallel dev:backend dev:frontend",
+    "dev:backend": "cd Backend && python manage.py runserver 0.0.0.0:8000",
+    "dev:frontend": "cd Frontend && npm run dev",
+    "start": "npm run dev",
+    "start:backend": "cd Backend && python manage.py runserver 0.0.0.0:8000",
     "start:frontend": "cd Frontend && npm run dev",
     "install": "cd Frontend && npm install"
   },

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, User } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface Attendance {
@@ -18,64 +20,39 @@ interface Attendance {
 
 const AttendanceList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Mock data
-  const mockAttendance: Attendance[] = [
-    {
-      id: 1,
-      employee_name: 'Rajesh Kumar',
-      employee_id: 'EMP1001',
-      date: '2024-01-20',
-      check_in_time: '09:15:00',
-      check_out_time: '18:30:00',
-      total_hours: 9.25,
-      is_present: true,
-      is_late: true,
-      status: 'Present'
-    },
-    {
-      id: 2,
-      employee_name: 'Priya Sharma',
-      employee_id: 'EMP1002',
-      date: '2024-01-20',
-      check_in_time: '08:45:00',
-      check_out_time: '17:45:00',
-      total_hours: 9.0,
-      is_present: true,
-      is_late: false,
-      status: 'Present'
-    },
-    {
-      id: 3,
-      employee_name: 'Dr. Amit Verma',
-      employee_id: 'EMP1003',
-      date: '2024-01-20',
-      check_in_time: '',
-      check_out_time: '',
-      total_hours: 0,
-      is_present: false,
-      is_late: false,
-      status: 'Absent'
-    }
-  ];
-
   useEffect(() => {
     loadAttendance();
   }, [refreshTrigger, selectedDate]);
 
+  const buildDemoAttendance = (date: string): Attendance[] => {
+    const base: Omit<Attendance, 'id'>[] = [
+      { employee_name: 'Amit Sharma', employee_id: 'EMP-001', date, check_in_time: '09:12', check_out_time: '18:03', total_hours: 8.8, is_present: true, is_late: true, status: 'Present' },
+      { employee_name: 'Priya Verma', employee_id: 'EMP-002', date, check_in_time: '09:00', check_out_time: '17:54', total_hours: 8.7, is_present: true, is_late: false, status: 'Present' },
+      { employee_name: 'Rohit Kumar', employee_id: 'EMP-003', date, check_in_time: '', check_out_time: '', total_hours: 0, is_present: false, is_late: false, status: 'Absent' },
+      { employee_name: 'Neha Gupta', employee_id: 'EMP-004', date, check_in_time: '10:05', check_out_time: '18:30', total_hours: 7.9, is_present: true, is_late: true, status: 'Present' },
+    ];
+    return base.map((r, idx) => ({ id: idx + 1, ...r }));
+  };
+
   const loadAttendance = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setAttendance(mockAttendance);
-        setLoading(false);
-      }, 1000);
+      if (isDemo) {
+        setAttendance(buildDemoAttendance(selectedDate));
+        return;
+      }
+      const data = await apiService.getAttendance();
+      const items = (data?.results || data || []) as any[];
+      setAttendance(items as any);
     } catch (error) {
       toast.error('Failed to load attendance data');
+    } finally {
       setLoading(false);
     }
   };
@@ -87,19 +64,25 @@ const AttendanceList: React.FC = () => {
 
   const markAttendance = async (employeeId: string, status: 'present' | 'absent') => {
     try {
-      setAttendance(attendance.map(record =>
-        record.employee_id === employeeId
-          ? {
-              ...record,
-              is_present: status === 'present',
-              status: status === 'present' ? 'Present' : 'Absent',
-              check_in_time: status === 'present' ? '09:00:00' : '',
-              check_out_time: status === 'present' ? '18:00:00' : '',
-              total_hours: status === 'present' ? 9 : 0
-            }
-          : record
-      ));
+      if (isDemo) {
+        setAttendance(prev => prev.map(r => r.employee_id === employeeId ? {
+          ...r,
+          is_present: status === 'present',
+          status: status === 'present' ? 'Present' : 'Absent',
+          check_in_time: status === 'present' ? (r.check_in_time || '09:00') : '',
+          check_out_time: status === 'present' ? (r.check_out_time || '18:00') : '',
+          total_hours: status === 'present' ? (r.total_hours || 8) : 0,
+        } : r));
+        toast.success(`Attendance marked as ${status}`);
+        return;
+      }
+      await apiService.createAttendance({
+        employee_id: employeeId,
+        date: selectedDate,
+        is_present: status === 'present',
+      });
       toast.success(`Attendance marked as ${status}`);
+      loadAttendance();
     } catch (error) {
       toast.error('Failed to mark attendance');
     }

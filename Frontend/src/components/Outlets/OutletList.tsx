@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, CreditCard as Edit, Building2, MapPin } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
 import toast from 'react-hot-toast';
 
@@ -27,65 +28,6 @@ const OutletList: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingOutlet, setEditingOutlet] = useState<Outlet | null>(null);
 
-  // Mock data
-  const mockOutlets: Outlet[] = [
-    {
-      id: 1,
-      outlet_code: 'MAIN0001',
-      name: 'Main Manufacturing Unit',
-      outlet_type: 'MAIN',
-      address: 'Industrial Area Phase-1',
-      city: 'Chandigarh',
-      state: 'Punjab',
-      phone: '9876543210',
-      manager_name: 'Rajesh Kumar',
-      is_active: true,
-      total_sales: 0,
-      stock_value: 500000
-    },
-    {
-      id: 2,
-      outlet_code: 'OUT0001',
-      name: 'Sector 17 Store',
-      outlet_type: 'RETAIL',
-      address: 'SCO 123, Sector 17-C',
-      city: 'Chandigarh',
-      state: 'Punjab',
-      phone: '9876543211',
-      manager_name: 'Priya Sharma',
-      is_active: true,
-      total_sales: 125000,
-      stock_value: 75000
-    },
-    {
-      id: 3,
-      outlet_code: 'OUT0002',
-      name: 'Panchkula Outlet',
-      outlet_type: 'RETAIL',
-      address: 'Shop 45, Sector 5',
-      city: 'Panchkula',
-      state: 'Haryana',
-      phone: '9876543212',
-      manager_name: 'Amit Singh',
-      is_active: true,
-      total_sales: 95000,
-      stock_value: 60000
-    },
-    {
-      id: 4,
-      outlet_code: 'OUT0003',
-      name: 'Mohali Store',
-      outlet_type: 'RETAIL',
-      address: 'Phase 7, Mohali',
-      city: 'Mohali',
-      state: 'Punjab',
-      phone: '9876543213',
-      manager_name: 'Sunita Verma',
-      is_active: true,
-      total_sales: 110000,
-      stock_value: 65000
-    }
-  ];
 
   useEffect(() => {
     loadOutlets();
@@ -94,12 +36,12 @@ const OutletList: React.FC = () => {
   const loadOutlets = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setOutlets(mockOutlets);
-        setLoading(false);
-      }, 1000);
+      const data = await apiService.getOutlets();
+      const items = (data?.results || data || []) as Outlet[];
+      setOutlets(items);
     } catch (error) {
       toast.error('Failed to load outlets');
+    } finally {
       setLoading(false);
     }
   };
@@ -147,21 +89,13 @@ const OutletList: React.FC = () => {
       e.preventDefault();
       try {
         if (outlet) {
-          const updatedOutlet = { ...outlet, ...formData };
-          setOutlets(outlets.map(o => o.id === outlet.id ? updatedOutlet : o));
+          await apiService.put(`/outlets/outlets/${outlet.id}/`, formData);
           toast.success('Outlet updated successfully');
         } else {
-          const newOutlet: Outlet = {
-            id: Date.now(),
-            outlet_code: `OUT${String(Date.now()).slice(-4)}`,
-            ...formData,
-            is_active: true,
-            total_sales: 0,
-            stock_value: 0
-          };
-          setOutlets([...outlets, newOutlet]);
+          await apiService.createOutlet(formData);
           toast.success('Outlet added successfully');
         }
+        await loadOutlets();
         onClose();
       } catch (error) {
         toast.error('Failed to save outlet');

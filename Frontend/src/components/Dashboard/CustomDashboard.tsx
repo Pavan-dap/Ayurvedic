@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, BarChart3, PieChart, TrendingUp, Table, Save, Eye } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, BarChart3, PieChart, TrendingUp, Save, Eye } from 'lucide-react';
+import apiService from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface DashboardWidget {
@@ -32,73 +33,34 @@ const CustomDashboard: React.FC = () => {
   const [showDashboardModal, setShowDashboardModal] = useState(false);
   const [editingWidget, setEditingWidget] = useState<DashboardWidget | null>(null);
 
-  // Mock saved dashboards
-  const mockDashboards: SavedDashboard[] = [
-    {
-      id: 1,
-      name: 'Sales Overview',
-      description: 'Daily sales metrics and trends',
-      widgets: [
-        {
-          id: 1,
-          name: 'Daily Sales',
-          type: 'chart',
-          chart_type: 'bar',
-          data_source: 'sales',
-          filters: { period: 'daily' },
-          position: { x: 0, y: 0, width: 6, height: 4 },
-          config: { title: 'Daily Sales Trend' },
-          created_at: '2024-01-20'
-        },
-        {
-          id: 2,
-          name: 'Top Products',
-          type: 'table',
-          data_source: 'products',
-          filters: { sort: 'sales_desc', limit: 10 },
-          position: { x: 6, y: 0, width: 6, height: 4 },
-          config: { title: 'Top Selling Products' },
-          created_at: '2024-01-20'
-        }
-      ],
-      is_default: true,
-      created_at: '2024-01-20'
-    },
-    {
-      id: 2,
-      name: 'Inventory Dashboard',
-      description: 'Stock levels and alerts',
-      widgets: [
-        {
-          id: 3,
-          name: 'Stock Alerts',
-          type: 'alert',
-          data_source: 'inventory',
-          filters: { alert_type: 'low_stock' },
-          position: { x: 0, y: 0, width: 4, height: 3 },
-          config: { title: 'Low Stock Alerts' },
-          created_at: '2024-01-20'
-        }
-      ],
-      is_default: false,
-      created_at: '2024-01-20'
-    }
-  ];
 
   useEffect(() => {
     loadDashboards();
   }, []);
 
+  useEffect(() => {
+    const fetchWidgets = async () => {
+      if (currentDashboard) {
+        try {
+          const fresh = await apiService.getDashboard(currentDashboard.id);
+          setWidgets(fresh.widgets || []);
+        } catch (e) {
+          toast.error('Failed to load widgets');
+        }
+      }
+    };
+    fetchWidgets();
+  }, [currentDashboard]);
+
   const loadDashboards = async () => {
     try {
-      setTimeout(() => {
-        setDashboards(mockDashboards);
-        const defaultDashboard = mockDashboards.find(d => d.is_default);
-        if (defaultDashboard) {
-          setCurrentDashboard(defaultDashboard);
-          setWidgets(defaultDashboard.widgets);
-        }
-      }, 500);
+      const data = await apiService.getDashboards();
+      const items = (data?.results || data || []) as any[];
+      setDashboards(items);
+      const defaultDashboard = items.find((d: any) => d.is_default);
+      if (defaultDashboard) {
+        setCurrentDashboard(defaultDashboard);
+      }
     } catch (error) {
       toast.error('Failed to load dashboards');
     }
@@ -106,14 +68,9 @@ const CustomDashboard: React.FC = () => {
 
   const saveDashboard = async (dashboardData: any) => {
     try {
-      const newDashboard: SavedDashboard = {
-        id: Date.now(),
-        ...dashboardData,
-        widgets: widgets,
-        created_at: new Date().toISOString()
-      };
-      setDashboards([...dashboards, newDashboard]);
-      setCurrentDashboard(newDashboard);
+      const created = await apiService.createDashboard(dashboardData);
+      await loadDashboards();
+      setCurrentDashboard(created);
       toast.success('Dashboard saved successfully');
     } catch (error) {
       toast.error('Failed to save dashboard');
@@ -122,14 +79,12 @@ const CustomDashboard: React.FC = () => {
 
   const addWidget = async (widgetData: any) => {
     try {
-      const newWidget: DashboardWidget = {
-        id: Date.now(),
-        ...widgetData,
-        position: { x: 0, y: 0, width: 6, height: 4 },
-        created_at: new Date().toISOString()
-      };
-      setWidgets([...widgets, newWidget]);
+      await apiService.createWidget({ ...widgetData, dashboard: currentDashboard?.id });
       toast.success('Widget added successfully');
+      if (currentDashboard) {
+        const fresh = await apiService.getDashboard(currentDashboard.id);
+        setWidgets(fresh.widgets || []);
+      }
     } catch (error) {
       toast.error('Failed to add widget');
     }
@@ -137,7 +92,11 @@ const CustomDashboard: React.FC = () => {
 
   const updateWidget = async (id: number, widgetData: any) => {
     try {
-      setWidgets(widgets.map(w => w.id === id ? { ...w, ...widgetData } : w));
+      await apiService.updateWidget(id, widgetData);
+      if (currentDashboard) {
+        const fresh = await apiService.getDashboard(currentDashboard.id);
+        setWidgets(fresh.widgets || []);
+      }
       toast.success('Widget updated successfully');
     } catch (error) {
       toast.error('Failed to update widget');
@@ -147,8 +106,12 @@ const CustomDashboard: React.FC = () => {
   const deleteWidget = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this widget?')) {
       try {
-        setWidgets(widgets.filter(w => w.id !== id));
+        await apiService.deleteWidget(id);
         toast.success('Widget deleted successfully');
+        if (currentDashboard) {
+          const fresh = await apiService.getDashboard(currentDashboard.id);
+          setWidgets(fresh.widgets || []);
+        }
       } catch (error) {
         toast.error('Failed to delete widget');
       }

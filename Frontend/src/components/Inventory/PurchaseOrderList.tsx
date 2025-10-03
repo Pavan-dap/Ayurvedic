@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Eye, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, Eye, CheckCircle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api';
 
@@ -25,41 +26,12 @@ interface POItem {
 
 const PurchaseOrderList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-
-  // Mock data
-  const mockOrders: PurchaseOrder[] = [
-    {
-      id: 1,
-      po_number: 'PO20240101',
-      vendor_name: 'Himalayan Herbs Pvt Ltd',
-      po_date: '2024-01-15',
-      expected_delivery: '2024-01-25',
-      status: 'CONFIRMED',
-      total_amount: 25000,
-      items: [
-        { id: 1, product_name: 'Brahmi Leaves', quantity: 50, unit_price: 800, total_price: 40000 },
-        { id: 2, product_name: 'Amla Powder', quantity: 25, unit_price: 600, total_price: 15000 }
-      ]
-    },
-    {
-      id: 2,
-      po_number: 'PO20240102',
-      vendor_name: 'Packaging Solutions',
-      po_date: '2024-01-18',
-      expected_delivery: '2024-01-28',
-      status: 'SENT',
-      total_amount: 15000,
-      items: [
-        { id: 3, product_name: 'Glass Bottles 100ml', quantity: 1000, unit_price: 15, total_price: 15000 }
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadOrders();
@@ -68,13 +40,43 @@ const PurchaseOrderList: React.FC = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
+      if (isDemo) {
+        const mock: PurchaseOrder[] = [
+          {
+            id: 1,
+            po_number: 'PO-2024-0001',
+            vendor_name: 'Herbal Sourcing Co.',
+            po_date: '2024-01-10',
+            expected_delivery: '2024-01-20',
+            status: 'SENT',
+            total_amount: 45500,
+            items: [
+              { id: 11, product_name: 'Neem Leaves', quantity: 200, unit_price: 45, total_price: 9000 },
+              { id: 12, product_name: 'Bottles 200ml', quantity: 1000, unit_price: 36.5, total_price: 36500 },
+            ],
+          },
+          {
+            id: 2,
+            po_number: 'PO-2024-0002',
+            vendor_name: 'Ayur Packagers',
+            po_date: '2024-01-12',
+            expected_delivery: '2024-01-25',
+            status: 'CONFIRMED',
+            total_amount: 18000,
+            items: [
+              { id: 21, product_name: 'Labels', quantity: 5000, unit_price: 3.6, total_price: 18000 },
+            ],
+          },
+        ];
+        setOrders(mock);
+        return;
+      }
       const data = await apiService.getPurchaseOrders();
-      setTimeout(() => {
-        setOrders(data?.results || mockOrders);
-        setLoading(false);
-      }, 1000);
+      const items = (data?.results || data || []) as PurchaseOrder[];
+      setOrders(items);
     } catch (error) {
       toast.error('Failed to load purchase orders');
+    } finally {
       setLoading(false);
     }
   };
@@ -98,10 +100,14 @@ const PurchaseOrderList: React.FC = () => {
 
   const confirmOrder = async (id: number) => {
     try {
-      setOrders(orders.map(order =>
-        order.id === id ? { ...order, status: 'CONFIRMED' } : order
-      ));
+      if (isDemo) {
+        setOrders(prev => prev.map(o => (o.id === id ? { ...o, status: 'CONFIRMED' } : o)));
+        toast.success('Purchase order confirmed');
+        return;
+      }
+      await apiService.confirmPurchaseOrder(id);
       toast.success('Purchase order confirmed');
+      loadOrders();
     } catch (error) {
       toast.error('Failed to confirm order');
     }
@@ -116,7 +122,7 @@ const PurchaseOrderList: React.FC = () => {
           <p className="text-gray-600">Manage purchase orders and procurement</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => toast('Use Vendors to create POs in this demo')}
           className="btn btn-primary"
         >
           <Plus className="w-4 h-4 mr-2" />

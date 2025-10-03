@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Play, CheckCircle, Clock, Factory } from 'lucide-react';
+import apiService from '../../services/api';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface ProductionBatch {
@@ -27,62 +29,13 @@ interface Ingredient {
 
 const ProductionBatchList: React.FC = () => {
   const { refreshTrigger } = useData();
+  const { isDemo } = useAuth();
   const [batches, setBatches] = useState<ProductionBatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<ProductionBatch | null>(null);
-
-  // Mock data based on the handwritten formulas from attachments
-  const mockBatches: ProductionBatch[] = [
-    {
-      id: 1,
-      batch_number: 'PB20240101',
-      product_name: 'Premium Coconut Oil',
-      formula_name: 'Premium Coconut Oil Formula',
-      planned_quantity: 900,
-      actual_quantity: 880,
-      status: 'COMPLETED',
-      production_date: '2024-01-15',
-      completion_date: '2024-01-16',
-      total_cost: 15000,
-      ingredients: [
-        { id: 1, name: 'Sprig Twist', required_quantity: 900, unit: 'gm', cost_per_unit: 5 },
-        { id: 2, name: 'Shea Butter Extract', required_quantity: 100, unit: 'gm', cost_per_unit: 15 },
-        { id: 3, name: 'Coconut Milk', required_quantity: 350, unit: 'gm', cost_per_unit: 8 },
-        { id: 4, name: 'Aloe Vera Gel', required_quantity: 150, unit: 'gm', cost_per_unit: 12 },
-        { id: 5, name: 'Rose Water', required_quantity: 50, unit: 'gm', cost_per_unit: 10 },
-        { id: 6, name: 'Mandela Pulp', required_quantity: 75, unit: 'gm', cost_per_unit: 20 },
-        { id: 7, name: 'Green Tea Extract', required_quantity: 50, unit: 'gm', cost_per_unit: 25 },
-        { id: 8, name: 'Onion Seed Extract', required_quantity: 37.5, unit: 'gm', cost_per_unit: 30 },
-        { id: 9, name: 'Argan Oil', required_quantity: 20, unit: 'ml', cost_per_unit: 50 },
-        { id: 10, name: 'Grape Seed Oil', required_quantity: 20, unit: 'ml', cost_per_unit: 40 },
-        { id: 11, name: 'Neem Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 35 },
-        { id: 12, name: 'Jasmin Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 60 },
-        { id: 13, name: 'Tea Tree Oil', required_quantity: 10, unit: 'ml', cost_per_unit: 45 },
-        { id: 14, name: 'Ethylene', required_quantity: 35, unit: 'gm', cost_per_unit: 15 },
-        { id: 15, name: 'Pyridoxine', required_quantity: 35, unit: 'gm', cost_per_unit: 25 }
-      ]
-    },
-    {
-      id: 2,
-      batch_number: 'PB20240102',
-      product_name: 'Herbal Hair Oil',
-      formula_name: 'Traditional Hair Oil',
-      planned_quantity: 500,
-      actual_quantity: 0,
-      status: 'IN_PROGRESS',
-      production_date: '2024-01-20',
-      total_cost: 8500,
-      ingredients: [
-        { id: 1, name: 'Coconut Oil Base', required_quantity: 300, unit: 'ml', cost_per_unit: 20 },
-        { id: 2, name: 'Brahmi Extract', required_quantity: 50, unit: 'gm', cost_per_unit: 40 },
-        { id: 3, name: 'Amla Powder', required_quantity: 75, unit: 'gm', cost_per_unit: 25 },
-        { id: 4, name: 'Fenugreek Seeds', required_quantity: 25, unit: 'gm', cost_per_unit: 15 }
-      ]
-    }
-  ];
 
   useEffect(() => {
     loadBatches();
@@ -91,12 +44,50 @@ const ProductionBatchList: React.FC = () => {
   const loadBatches = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setBatches(mockBatches);
-        setLoading(false);
-      }, 1000);
+      if (isDemo) {
+        const mock: ProductionBatch[] = [
+          {
+            id: 1,
+            batch_number: 'PB-2024-0001',
+            product_name: 'Brahmi Hair Oil',
+            formula_name: 'Brahmi Oil Base v2',
+            planned_quantity: 500,
+            actual_quantity: 0,
+            status: 'PLANNED',
+            production_date: '2024-01-20',
+            total_cost: 55000,
+            ingredients: [
+              { id: 11, name: 'Brahmi Extract', required_quantity: 50, unit: 'kg', cost_per_unit: 400 },
+              { id: 12, name: 'Sesame Oil', required_quantity: 300, unit: 'liter', cost_per_unit: 80 },
+              { id: 13, name: 'Fragrance', required_quantity: 5, unit: 'kg', cost_per_unit: 800 },
+            ],
+          },
+          {
+            id: 2,
+            batch_number: 'PB-2024-0002',
+            product_name: 'Triphala Churna',
+            formula_name: 'Triphala Blend',
+            planned_quantity: 800,
+            actual_quantity: 650,
+            status: 'IN_PROGRESS',
+            production_date: '2024-01-18',
+            total_cost: 42000,
+            ingredients: [
+              { id: 21, name: 'Haritaki', required_quantity: 100, unit: 'kg', cost_per_unit: 120 },
+              { id: 22, name: 'Amalaki', required_quantity: 100, unit: 'kg', cost_per_unit: 130 },
+              { id: 23, name: 'Bibhitaki', required_quantity: 100, unit: 'kg', cost_per_unit: 110 },
+            ],
+          },
+        ];
+        setBatches(mock);
+        return;
+      }
+      const data = await apiService.getProductionBatches();
+      const items = (data?.results || data || []) as ProductionBatch[];
+      setBatches(items);
     } catch (error) {
       toast.error('Failed to load production batches');
+    } finally {
       setLoading(false);
     }
   };
@@ -128,28 +119,31 @@ const ProductionBatchList: React.FC = () => {
     }
   };
 
-  const startProduction = async (id: number) => {
+  const startProductionBatch = async (id: number) => {
     try {
-      setBatches(batches.map(batch =>
-        batch.id === id ? { ...batch, status: 'IN_PROGRESS' } : batch
-      ));
+      if (isDemo) {
+        setBatches(prev => prev.map(b => (b.id === id ? { ...b, status: 'IN_PROGRESS' } : b)));
+        toast.success('Production started successfully');
+        return;
+      }
+      await apiService.startProduction(id);
       toast.success('Production started successfully');
+      loadBatches();
     } catch (error) {
       toast.error('Failed to start production');
     }
   };
 
-  const completeProduction = async (id: number, actualQuantity: number) => {
+  const completeProductionBatch = async (id: number, actualQuantity: number) => {
     try {
-      setBatches(batches.map(batch =>
-        batch.id === id ? { 
-          ...batch, 
-          status: 'COMPLETED', 
-          actual_quantity: actualQuantity,
-          completion_date: new Date().toISOString().split('T')[0]
-        } : batch
-      ));
+      if (isDemo) {
+        setBatches(prev => prev.map(b => (b.id === id ? { ...b, status: 'COMPLETED', actual_quantity: actualQuantity, completion_date: new Date().toISOString().split('T')[0] } : b)));
+        toast.success('Production completed successfully');
+        return;
+      }
+      await apiService.completeProduction(id, { actual_quantity: actualQuantity });
       toast.success('Production completed successfully');
+      loadBatches();
     } catch (error) {
       toast.error('Failed to complete production');
     }
@@ -244,7 +238,7 @@ const ProductionBatchList: React.FC = () => {
                   </div>
                   <button
                     onClick={() => {
-                      completeProduction(batch.id, actualQuantity);
+                      completeProductionBatch(batch.id, actualQuantity);
                       onClose();
                     }}
                     className="btn btn-success"
@@ -276,17 +270,27 @@ const ProductionBatchList: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const newBatch: ProductionBatch = {
-          id: Date.now(),
-          batch_number: `PB${Date.now()}`,
-          ...formData,
-          actual_quantity: 0,
-          status: 'PLANNED',
-          total_cost: 0,
-          ingredients: []
-        };
-        setBatches([...batches, newBatch]);
+        if (isDemo) {
+          const newBatch: ProductionBatch = {
+            id: Date.now(),
+            batch_number: `PB-${String(Date.now()).slice(-6)}`,
+            product_name: formData.product_name,
+            formula_name: formData.formula_name,
+            planned_quantity: formData.planned_quantity,
+            actual_quantity: 0,
+            status: 'PLANNED',
+            production_date: formData.production_date,
+            total_cost: Math.round(formData.planned_quantity * 80),
+            ingredients: [],
+          };
+          setBatches(prev => [newBatch, ...prev]);
+          toast.success('Production batch created successfully');
+          onClose();
+          return;
+        }
+        await apiService.createProductionBatch(formData);
         toast.success('Production batch created successfully');
+        loadBatches();
         onClose();
       } catch (error) {
         toast.error('Failed to create production batch');
@@ -481,7 +485,7 @@ const ProductionBatchList: React.FC = () => {
                           </button>
                           {batch.status === 'PLANNED' && (
                             <button
-                              onClick={() => startProduction(batch.id)}
+                              onClick={() => startProductionBatch(batch.id)}
                               className="btn btn-primary btn-sm"
                             >
                               <Play className="w-3 h-3 mr-1" />

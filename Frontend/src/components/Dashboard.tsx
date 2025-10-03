@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   DollarSign,
   ShoppingCart,
-  Clock,
   Factory,
   Building2
 } from 'lucide-react';
