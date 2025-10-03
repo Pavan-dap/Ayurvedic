@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const decoded: any = jwtDecode(access);
       const userId = decoded.user_id;
-      console.log("Decoded JWT:", decoded);
+      // console.log("Decoded JWT:", decoded);
 
       // Fetch real user info from backend
       const userResponse = await apiService.get(`/users/${userId}/`);

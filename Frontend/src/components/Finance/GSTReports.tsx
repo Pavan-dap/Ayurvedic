@@ -113,6 +113,20 @@ const GSTReports: React.FC = () => {
       year: 2024
     }
   ];
+  
+    const loadReports = async () => {
+      setLoading(true);
+      try {
+        setTimeout(() => {
+          setGstReports(mockGSTReports);
+          setHsnReports(mockHSNReports);
+          setLoading(false);
+        }, 1000);
+      } catch (error) {
+        toast.error('Failed to load GST reports');
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     loadReports();
@@ -126,20 +140,6 @@ const GSTReports: React.FC = () => {
       </div>
     );
   }
-
-  const loadReports = async () => {
-    setLoading(true);
-    try {
-      setTimeout(() => {
-        setGstReports(mockGSTReports);
-        setHsnReports(mockHSNReports);
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      toast.error('Failed to load GST reports');
-      setLoading(false);
-    }
-  };
 
   const generateGSTReport = async (reportType: string) => {
     try {
